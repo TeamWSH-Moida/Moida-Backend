@@ -11,7 +11,8 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "Expired Token"),
-    INVALID_TOKEN_TYPE(HttpStatus.UNAUTHORIZED, "Invalid Token Type");
+    INVALID_TOKEN_TYPE(HttpStatus.UNAUTHORIZED, "Invalid Token Type"),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid Token");
 
     private final HttpStatus status;
     private final String message;
