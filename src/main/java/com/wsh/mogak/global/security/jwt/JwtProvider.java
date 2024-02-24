@@ -77,13 +77,13 @@ public class JwtProvider {
         }
     }
 
-    private String generateAccessToken(String email) {
+    private String generateAccessToken(UUID id) {
         long now = (new Date()).getTime();
 
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_TIME);
 
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(id.toString())
                 .setIssuedAt(new Date())
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS256)
