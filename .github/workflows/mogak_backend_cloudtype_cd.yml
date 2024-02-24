@@ -1,0 +1,76 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - cloudtype
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mogak-Backend CD Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: ${{ success() }}
+        with:
+          title: 🏁️ Mogak-Backend CD Start
+          webhook: ${{ secrets.MOGAK_DISCORD_WEBHOOK }}
+          color: 00FF00
+
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: wsh/mogak-backend
+          stage: main
+          yaml: >
+            name: mogak-backend
+            app: java@17
+            ports: 8080
+            options:
+              env:
+                - name: DB_DRIVER
+                  value: ${{ secrets.DB_DRIVER }}
+                - name: DB_PASSWORD
+                  value: ${{ secrets.DB_PASSWORD }}
+                - name: DB_URL
+                  value: ${{ secrets.DB_URL }}
+                - name: DB_USERNAME
+                  value: ${{ secrets.DB_USERNAME }}
+                - name: JWT_ACCESS_SECRET
+                  value: ${{ secrets.JWT_ACCESS_SECRET }}
+                - name: JWT_REFRESH_SECRET
+                  value: ${{ secrets.JWT_REFRESH_SECRET }}
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
+              start: java -jar build/libs/mogak-0.0.1-SNAPSHOT.jar
+
+      - name: Mogak-Backend CD Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: ${{ success() }}
+        with:
+          title: ✅ Mogak-Backend CD Success
+          webhook: ${{ secrets.MOGAK_DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          description: CD를 성공하였습니다.
+          color: 00FF00
+          username: Mogak-Backend CD
+          url: https://github.com/TeamWSH-Moida/Mogak-Backend
+
+      - name: Mogak-Backend CD Discord Notification
+        uses: sarisia/actions-status-discord@v1
+        if: ${{ failure() }}
+        with:
+          title: ❗ Mogak-Backend CD Failed️
+          webhook: ${{ secrets.MOGAK_DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          description: CD를 실패하였습니다.
+          color: FF0000
+          username: Mogak-Backend CD
+          url: https://github.com/TeamWSH-Moida/Mogak-Backend
