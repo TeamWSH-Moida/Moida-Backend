@@ -1,4 +1,4 @@
-package com.wsh.mogak.domain.member;
+package com.wsh.mogak.domain.member.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,19 +23,18 @@ public class Member {
     @Column(name = "member_id")
     private UUID id;
 
-    @Column(name = "title", columnDefinition = "TEXT")
-    private String title;
+    @Column(name = "email", length = 50)
+    private String email;
+
+    @Column(name = "password", length = 128)
+    private String password;
+
+    @Column(name = "name", length = 20)
+    private String name;
+
+    @Column(name = "school", length = 50)
+    private String school;
 
     @Column(name = "decription", columnDefinition = "TEXT")
     private String description;
-
-    @Column(name = "current_count", columnDefinition = "SMALLINT")
-    private int currentCount;
-
-    @Column(name = "max_count", columnDefinition = "SMALLINT")
-    private int maxCount;
-
-
-
-
 }
