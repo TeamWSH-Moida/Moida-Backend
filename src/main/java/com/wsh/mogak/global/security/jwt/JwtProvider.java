@@ -1,5 +1,6 @@
 package com.wsh.mogak.global.security.jwt;
 
+import com.wsh.mogak.global.auth.AuthDetailsService;
 import com.wsh.mogak.global.exception.ErrorCode;
 import com.wsh.mogak.global.exception.GlobalException;
 import io.jsonwebtoken.Claims;
@@ -8,40 +9,41 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.wsh.mogak.global.security.filter.JwtFilter.AUTHORIZATION_HEADER;
 import static com.wsh.mogak.global.security.filter.JwtFilter.BEARER_PREFIX;
 
 @Component
+@RequiredArgsConstructor
 public class JwtProvider {
     private static final String AUTHORITIES_KEY = "auth";
     private static final long ACCESS_TOKEN_TIME = 1000 * 60 * 30;
     private static final long REFRESH_TOKEN_TIME = 1000 * 60 * 60 * 24 * 7;
 
-    private final Key key;
+    @Value("${jwt.secret}")
+    private String secretKey;
+    private static Key key;
+    private final AuthDetailsService authDetailsService;
 
-    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
-
+    @PostConstruct
+    public void init(){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        key = Keys.hmacShaKeyFor(keyBytes);
     }
+
 
     public boolean validateToken(String token) {
         try {
@@ -64,14 +66,8 @@ public class JwtProvider {
             throw new GlobalException(ErrorCode.INVALID_TOKEN);
         }
 
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
-
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+        UserDetails principal = authDetailsService.loadUserByUsername(parseClaims(accessToken).getSubject());
+        return new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities());
     }
 
     private Claims parseClaims(String accessToken) {
