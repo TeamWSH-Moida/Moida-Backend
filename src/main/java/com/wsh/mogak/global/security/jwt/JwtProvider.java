@@ -77,7 +77,7 @@ public class JwtProvider {
         }
     }
 
-    private String generateAccessToken(UUID id) {
+    public String generateAccessToken(UUID id) {
         long now = (new Date()).getTime();
 
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_TIME);
@@ -90,7 +90,7 @@ public class JwtProvider {
                 .compact();
     }
 
-    private String generateRefreshToken(UUID id) {
+    public String generateRefreshToken(UUID id) {
         long now = (new Date()).getTime();
 
         Date refreshTokenExpiresIn = new Date(now + REFRESH_TOKEN_TIME);
